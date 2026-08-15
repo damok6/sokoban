@@ -52,6 +52,14 @@ def move():
     return jsonify({'ok': ok})
 
 
+@app.route('/api/undo', methods=['POST'])
+def undo():
+    game.reap_stale()
+    pid = player_id_for(request)
+    ok = game.undo(pid)
+    return jsonify({'ok': ok})
+
+
 @app.route('/api/reset', methods=['POST'])
 def reset():
     game.reset()

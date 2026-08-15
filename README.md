@@ -28,9 +28,12 @@ push any box, and you all win together when every box is on a goal.
 
 - **Swipe** on the board (mobile), **arrow keys** or **WASD** (desktop), or the
   on-screen **D-pad** (touch screens).
+- **Undo** your own last move(s) with the Undo button or **Ctrl+Z**. Each
+  player keeps their own undo history, so you can only undo moves *you* made
+  (including pushes — the box moves back too).
 - The board auto-scales to fit the viewport; on phones the side panel is
   hidden and the D-pad is pinned to the bottom.
-- **Reset** button is in the top-right header.
+- **Reset** and **Undo** buttons are in the top-right header.
 
 ## Getting it running on your own computer
 

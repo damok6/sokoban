@@ -85,6 +85,27 @@ function fit() {
   canvas.style.transformOrigin = 'top left';
 }
 
+async function undo() {
+  if (!myId) return;
+  const res = await fetch('/api/undo', { method: 'POST' });
+  const data = await res.json();
+  if (data && data.ok) {
+    notify('Move undone', 'info');
+  } else {
+    notify('Nothing to undo', 'warn');
+  }
+}
+
+function updateUndoButton() {
+  const mine = state && state.players.find(p => p.id === myId);
+  const btn = el('undo');
+  if (mine && mine.can_undo) {
+    btn.disabled = false;
+  } else {
+    btn.disabled = true;
+  }
+}
+
 function render() {
   const w = state.width * TILE;
   const h = state.height * TILE;
@@ -194,6 +215,7 @@ function renderPanel() {
     playersEl.innerHTML +=
       `<div class="player-row"><span class="swatch" style="background:${p.color}"></span><span class="name">${p.id === myId ? 'You' : 'Player ' + state.players.indexOf(p)}</span></div>`;
   }
+  updateUndoButton();
 }
 
 async function tick() {
@@ -204,6 +226,11 @@ async function tick() {
 }
 
 window.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.code === 'KeyZ') {
+    e.preventDefault();
+    undo();
+    return;
+  }
   const dir = DIRS[e.code];
   if (!dir) return;
   e.preventDefault();
@@ -255,6 +282,8 @@ document.getElementById('reset').addEventListener('click', async () => {
   await fetch('/api/reset', { method: 'POST' });
   poll();
 });
+
+document.getElementById('undo').addEventListener('click', () => undo());
 
 window.addEventListener('resize', () => { if (state) render(); });
 window.addEventListener('orientationchange', () => { if (state) render(); });

@@ -79,6 +79,7 @@ class Game:
             self.won = False
             for pid, p in self.players.items():
                 p['pos'] = list(p['spawn'])
+                p['history'] = []
 
     def register(self, pid):
         with self.lock:
@@ -95,6 +96,7 @@ class Game:
                 'spawn': list(spawn),
                 'pos': list(spawn),
                 'last_seen': time.time(),
+                'history': [],
             }
             self.players[pid] = player
             self.player_order.append(pid)
@@ -132,6 +134,7 @@ class Game:
             x, y = p['pos']
             nx, ny = x + dx, y + dy
             target = (nx, ny)
+            pushed_box = None
             if target in self.walls:
                 return False
             if target in self.boxes:
@@ -142,11 +145,33 @@ class Game:
                     return False
                 self.boxes.discard(target)
                 self.boxes.add(behind)
+                pushed_box = (target, behind)
             elif self.occupied_by_player(target):
                 return False
+            p['history'].append({'from': (x, y), 'box': pushed_box})
             p['pos'] = [nx, ny]
             if self.boxes and self.boxes <= self.goals:
                 self.won = True
+            return True
+
+    def undo(self, pid):
+        with self.lock:
+            p = self.players.get(pid)
+            if p is None or p['pos'] is None:
+                return False
+            if not p['history']:
+                return False
+            entry = p['history'].pop()
+            fx, fy = entry['from']
+            box_from, box_to = entry['box'] if entry['box'] else (None, None)
+            if box_to is not None and self.occupied_by_player(box_to):
+                return False
+            p['pos'] = [fx, fy]
+            if box_from is not None and box_to in self.boxes:
+                self.boxes.discard(box_to)
+                self.boxes.add(box_from)
+            self.won = False
+            self.emit(f"Player {p['color']} undid a move")
             return True
 
     def state(self):
@@ -162,6 +187,7 @@ class Game:
                     'color': p['color'],
                     'x': p['pos'][0],
                     'y': p['pos'][1],
+                    'can_undo': bool(p['history']),
                 } for pid, p in self.players.items() if p['pos'] is not None],
                 'won': self.won,
                 'max_players': len(self.spawns),

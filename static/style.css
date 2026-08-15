@@ -116,6 +116,11 @@ button.header-btn {
   padding: 6px 14px;
 }
 
+button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
 button:hover { filter: brightness(1.1); }
 
 #hint { color: var(--muted); font-size: 13px; line-height: 1.5; }
