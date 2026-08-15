@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sokoban Co-op</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <h1>Sokoban Co-op</h1>
+    <div id="status">Connecting&hellip;</div>
+    <button id="reset" class="header-btn" title="Reset board">Reset</button>
+  </header>
+  <main>
+    <div id="stage">
+      <canvas id="board"></canvas>
+    </div>
+    <aside id="panel">
+      <section id="you"></section>
+      <section id="players"></section>
+      <p id="hint">Swipe on the board to move. Arrow keys, WASD, or the buttons below work too. Push the boxes onto the targets together. Everyone wins.</p>
+    </aside>
+  </main>
+  <div id="dpad">
+    <button data-dir="up" aria-label="up">&#9650;</button>
+    <div>
+      <button data-dir="left" aria-label="left">&#9664;</button>
+      <button data-dir="down" aria-label="down">&#9660;</button>
+      <button data-dir="right" aria-label="right">&#9654;</button>
+    </div>
+  </div>
+  <div id="toasts"></div>
+  <script src="/static/game.js"></script>
+</body>
+</html>
