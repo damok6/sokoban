@@ -17,25 +17,83 @@ PLAYER_COLORS = [
 ]
 
 LEVELS = [
+    # 0 - Intro: open board, teaches the controls. Solvable by one player.
     [
         "##############",
+        "#.GG......GG.#",
+        "#....####....#",
+        "#.$$......$$.#",
+        "#....####....#",
         "#............#",
-        "#..$......$..#",
-        "#..########..#",
-        "#..########..#",
         "#............#",
-        "#....GGGG....#",
         "#.@........@.#",
         "#............#",
-        "#..$......$..#",
+        "#............#",
         "#............#",
         "##############",
+    ],
+    # 1 - Handoff: one capped 1-wide corridor. Boxes must be pushed up the
+    # corridor and can only be pushed sideways by the partner on the far side.
+    [
+        "##############",
+        "#.@..........#",
+        "#............#",
+        "#...########.#",
+        "#.G........G.#",
+        "#####.########",
+        "#####.########",
+        "#............#",
+        "#....$..$....#",
+        "#..........@.#",
+        "#............#",
+        "##############",
+    ],
+    # 2 - Maze handoff: same mechanic, top region has maze pockets.
+    [
+        "##############",
+        "#.@.........##",
+        "#.....#......#",
+        "#..########..#",
+        "#.G........G.#",
+        "#####.########",
+        "#####.########",
+        "#............#",
+        "#....$..$....#",
+        "#..........@.#",
+        "#............#",
+        "##############",
+    ],
+    # 3 - Winding maze: bigger board, winding top/bottom mazes, one corridor.
+    [
+        "################",
+        "#..@...........#",
+        "#....##........#",
+        "#...#..#########",
+        "#.G...........G#",
+        "########.#######",
+        "########.#######",
+        "#..............#",
+        "#..##..#....#..#",
+        "#....$....#....#",
+        "#...#....#..$..#",
+        "#..@......#....#",
+        "#.....#.....#..#",
+        "################",
     ],
 ]
 
 
 class Game:
     def __init__(self, level=0):
+        self.players = {}
+        self.player_order = []
+        self.lock = threading.Lock()
+        self.PLAYER_TIMEOUT = 15
+        self.events = []
+        self.event_seq = 0
+        self.load_level(level)
+
+    def load_level(self, level):
         self.level_index = level
         rows = LEVELS[level]
         self.width = max(len(r) for r in rows)
@@ -61,10 +119,6 @@ class Game:
         self.players = {}
         self.player_order = []
         self.won = False
-        self.lock = threading.Lock()
-        self.PLAYER_TIMEOUT = 15
-        self.events = []
-        self.event_seq = 0
         self.reset()
 
     def emit(self, message):
@@ -74,12 +128,11 @@ class Game:
             self.events = self.events[-50:]
 
     def reset(self):
-        with self.lock:
-            self.boxes = set(self.init_boxes)
-            self.won = False
-            for pid, p in self.players.items():
-                p['pos'] = list(p['spawn'])
-                p['history'] = []
+        self.boxes = set(self.init_boxes)
+        self.won = False
+        for pid, p in self.players.items():
+            p['pos'] = list(p['spawn'])
+            p['history'] = []
 
     def register(self, pid):
         with self.lock:
@@ -192,4 +245,14 @@ class Game:
                 'won': self.won,
                 'max_players': len(self.spawns),
                 'events': list(self.events),
+                'level': self.level_index,
+                'num_levels': len(LEVELS),
             }
+
+    def set_level(self, level):
+        if not 0 <= level < len(LEVELS):
+            return False
+        with self.lock:
+            self.load_level(level)
+            self.emit(f"Switched to level {level + 1}")
+        return True

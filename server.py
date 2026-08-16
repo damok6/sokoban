@@ -62,8 +62,21 @@ def undo():
 
 @app.route('/api/reset', methods=['POST'])
 def reset():
-    game.reset()
+    with game.lock:
+        game.reset()
     return jsonify({'ok': True})
+
+
+@app.route('/api/level', methods=['POST'])
+def set_level():
+    data = request.get_json(silent=True) or {}
+    try:
+        level = int(data.get('level', 0))
+    except (TypeError, ValueError):
+        return jsonify({'ok': False, 'error': 'bad level'}), 400
+    if not game.set_level(level):
+        return jsonify({'ok': False, 'error': 'bad level'}), 400
+    return jsonify({'ok': True, 'level': game.level_index})
 
 
 if __name__ == '__main__':

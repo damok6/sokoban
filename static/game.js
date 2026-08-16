@@ -187,6 +187,9 @@ function render() {
   }
 
   renderPanel();
+  if (state.level !== undefined) {
+    el('level').value = String(state.level);
+  }
 }
 
 function renderPanel() {
@@ -280,6 +283,15 @@ for (const btn of document.querySelectorAll('#dpad button')) {
 
 document.getElementById('reset').addEventListener('click', async () => {
   await fetch('/api/reset', { method: 'POST' });
+  poll();
+});
+
+document.getElementById('level').addEventListener('change', async (e) => {
+  await fetch('/api/level', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ level: Number(e.target.value) }),
+  });
   poll();
 });
 

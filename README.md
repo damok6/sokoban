@@ -110,9 +110,34 @@ have to rediscover them:
 
 ## Roadmap: more levels for deeper co-op
 
-The current single level is deliberately small (two spawns, four boxes, four
-goals) to learn the controls. The level format in `game.py` (`LEVELS`) is a
-simple text grid — any new puzzle is just a few strings. Symbols:
+The original single level turned out to be **unwinnable** — we found this by
+running a BFS solver against it. The wall block funnelled boxes into a column
+that deadlocked once multiple boxes needed the goals. That drove us to add a
+level validator, which now verifies every level before shipping:
+
+- all rows the same width
+- `# boxes == # goals`
+- the whole board is reachable from every spawn
+- for coop levels: a **single player cannot solve it**, but **two players can**
+
+The game now ships **4 levels**:
+
+| Level | Mechanic |
+|-------|----------|
+| 1 | Intro — open board, solvable by one player (learn the controls) |
+| 2 | **Handoff** — a capped 1-wide corridor: boxes must be pushed up it, and only the partner on the far side can push them sideways into the goals |
+| 3 | Maze handoff — same forced coop, with maze pockets on the top side |
+| 4 | Winding maze — bigger board, winding mazes top and bottom, one corridor |
+
+The coop-forcing trick is a **capped single corridor**: exactly one 1-wide
+passage connects the two halves, and its top is walled so a box pushed up it
+stops at the seam. The pusher is then trapped below the box (can't pass it in a
+1-wide corridor), so the only way to move it onto a goal is for the partner —
+who climbed up *before* the box blocked the passage — to push it sideways.
+Levels 2–4 all verify as "1 player impossible, 2 players win".
+
+The level format in `game.py` (`LEVELS`) is a simple text grid — any new
+puzzle is just a few strings. Symbols:
 
 | Char | Meaning |
 |------|---------|
@@ -122,7 +147,9 @@ simple text grid — any new puzzle is just a few strings. Symbols:
 | `*`  | box already on a goal |
 | `@`  | player spawn |
 
-Planned level ideas that push the cooperative angle:
+Use the **level dropdown in the top-right** to switch levels.
+
+More ideas to push the cooperative angle:
 
 - **Chokepoints**: narrow corridors only one player can pass at a time, forcing
   turns and communication.
@@ -134,4 +161,4 @@ Planned level ideas that push the cooperative angle:
 
 Each level should keep `# boxes == # goals` and at least one spawn per
 expected player, otherwise the game is un-winnable or players get locked out —
-two things our validator checks and the reaper handles gracefully.
+two things the validator checks and the reaper handles gracefully.
