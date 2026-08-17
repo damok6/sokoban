@@ -292,7 +292,9 @@ document.getElementById('level').addEventListener('change', async (e) => {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ level: Number(e.target.value) }),
   });
-  poll();
+  myId = null;
+  await register();
+  await poll();
 });
 
 document.getElementById('undo').addEventListener('click', () => undo());

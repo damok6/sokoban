@@ -27,7 +27,8 @@ def index():
 @app.route('/api/register', methods=['POST'])
 def register():
     pid = player_id_for(request)
-    player = game.register(pid)
+    with game.lock:
+        player = game.register(pid)
     if player is None:
         return jsonify({'error': 'game is full'}), 409
     return jsonify({'player_id': pid, 'color': player['color']})

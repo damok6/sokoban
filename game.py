@@ -135,26 +135,25 @@ class Game:
             p['history'] = []
 
     def register(self, pid):
-        with self.lock:
-            if pid in self.players:
-                self.players[pid]['last_seen'] = time.time()
-                return self.players[pid]
-            idx = len(self.player_order)
-            if idx >= len(self.spawns):
-                return None
-            spawn = self.spawns[idx]
-            player = {
-                'id': pid,
-                'color': PLAYER_COLORS[idx % len(PLAYER_COLORS)],
-                'spawn': list(spawn),
-                'pos': list(spawn),
-                'last_seen': time.time(),
-                'history': [],
-            }
-            self.players[pid] = player
-            self.player_order.append(pid)
-            self.emit(f"Player {player['color']} joined the game")
-            return player
+        if pid in self.players:
+            self.players[pid]['last_seen'] = time.time()
+            return self.players[pid]
+        idx = len(self.player_order)
+        if idx >= len(self.spawns):
+            return None
+        spawn = self.spawns[idx]
+        player = {
+            'id': pid,
+            'color': PLAYER_COLORS[idx % len(PLAYER_COLORS)],
+            'spawn': list(spawn),
+            'pos': list(spawn),
+            'last_seen': time.time(),
+            'history': [],
+        }
+        self.players[pid] = player
+        self.player_order.append(pid)
+        self.emit(f"Player {player['color']} joined the game")
+        return player
 
     def touch(self, pid):
         with self.lock:
@@ -253,6 +252,11 @@ class Game:
         if not 0 <= level < len(LEVELS):
             return False
         with self.lock:
+            old_players = list(self.players.items())
             self.load_level(level)
+            for pid, old in old_players:
+                player = self.register(pid)
+                if player is not None:
+                    player['color'] = old['color']
             self.emit(f"Switched to level {level + 1}")
         return True
